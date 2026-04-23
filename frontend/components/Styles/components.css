@@ -1,0 +1,54 @@
+/* ─────────────────────────────
+   Cards
+──────────────────────────── */
+.lf-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  transition: all 0.15s ease;
+}
+
+.lf-card:hover {
+  transform: translateY(-2px);
+}
+
+/* ─────────────────────────────
+   Badges
+──────────────────────────── */
+.lf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 3px 10px;
+  border-radius: 20px;
+
+  font-size: 0.72rem;
+  font-weight: 600;
+
+  background: #F7FAFC;
+  border: 1px solid var(--border);
+  color: var(--ink2);
+}
+
+.lf-badge.green {
+  background: var(--green-light);
+  border-color: var(--green);
+}
+
+/* ─────────────────────────────
+   Audio Player UI
+──────────────────────────── */
+.lf-audio-player {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  background: var(--green-light);
+  border: 1px solid #C6F6D5;
+  border-radius: 999px;
+
+  padding: 6px 14px;
+  font-size: 0.8rem;
+}

@@ -1,0 +1,39 @@
+/* ─────────────────────────────
+   Fonts
+──────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+/* ─────────────────────────────
+   Reset
+──────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  font-family: 'DM Sans', sans-serif;
+  background: #F5F7FA;
+  color: #1A202C;
+}
+
+/* ─────────────────────────────
+   Design Tokens (SaaS system)
+──────────────────────────── */
+:root {
+  --bg: #F5F7FA;
+  --surface: #FFFFFF;
+  --border: #E2E8F0;
+
+  --ink: #1A202C;
+  --ink2: #4A5568;
+  --ink3: #A0AEC0;
+
+  --green: #38A169;
+  --green-light: #F0FFF4;
+
+  --blue: #3182CE;
+  --blue-light: #EBF8FF;
+
+  --mint: #00BFA5;
+  --navy: #0F1923;
+}

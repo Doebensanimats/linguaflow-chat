@@ -1,0 +1,35 @@
+/* ─────────────────────────────
+   Buttons
+──────────────────────────── */
+.stButton > button {
+  background: var(--green);
+  color: white;
+  border-radius: 10px;
+  font-weight: 600;
+  border: none;
+  transition: 0.15s ease;
+}
+
+.stButton > button:hover {
+  background: #2F855A;
+  transform: translateY(-1px);
+}
+
+/* ─────────────────────────────
+   Inputs
+──────────────────────────── */
+.stTextInput input,
+.stTextArea textarea {
+  background: #F7FAFC;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+/* ─────────────────────────────
+   Sidebar Active Link
+──────────────────────────── */
+a[data-testid="stSidebarNavLink"][aria-current="page"] {
+  background: rgba(0,191,165,0.18);
+  border-left: 3px solid var(--mint);
+  color: white;
+}

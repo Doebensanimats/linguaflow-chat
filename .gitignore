@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+
+# Environment
+.env
+
+# Firebase / AWS secrets
+config/firebase-key.json
+*.json
+
+# Streamlit
+.streamlit/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Virtual env
+venv/
+.env/

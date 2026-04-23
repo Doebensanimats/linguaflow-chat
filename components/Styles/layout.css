@@ -1,0 +1,48 @@
+/* ─────────────────────────────
+   Streamlit Layout Fixes
+──────────────────────────── */
+#MainMenu, footer, header {
+  visibility: hidden;
+}
+
+.block-container {
+  padding: 0;
+  max-width: 100%;
+}
+
+/* ─────────────────────────────
+   App Container
+──────────────────────────── */
+.lf-content {
+  padding: 1.5rem 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ─────────────────────────────
+   Topbar (SaaS style)
+──────────────────────────── */
+.lf-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 1rem 2rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.lf-topbar-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.lf-topbar-sub {
+  font-size: 0.75rem;
+  color: var(--ink3);
+}
