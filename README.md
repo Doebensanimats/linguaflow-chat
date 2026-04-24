@@ -1,22 +1,4 @@
-That’s fine — you don’t need one to push, but you **should add one now** because this is a solid portfolio project.
 
-Let’s do it properly.
-
----
-
-# 🚀 1. Create a README.md
-
-In your project root, create a file:
-
-```bash id="r8k2aa"
-README.md
-```
-
----
-
-# ✍️ 2. Paste this (clean professional version)
-
-```markdown id="t9k2bb"
 # 🌐 LinguaFlow Chat App
 
 A real-time multilingual chat application that translates messages instantly using AWS Translate, FastAPI, Streamlit, and Firebase.
