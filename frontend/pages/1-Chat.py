@@ -30,7 +30,6 @@ st.set_page_config(page_title="LinguaFlow Chat", layout="wide")
 # HELPERS
 # ─────────────────────────────────────────────
 def strip_tags(val):
-    """Remove any HTML tags accidentally stored in Firestore fields."""
     return re.sub(r'<[^>]+>', '', str(val or ""))
 
 
@@ -39,16 +38,12 @@ def strip_tags(val):
 # ─────────────────────────────────────────────
 if "username" not in st.session_state:
     st.session_state.username = ""
-
 if "source_lang" not in st.session_state:
     st.session_state.source_lang = "en"
-
 if "target_lang" not in st.session_state:
     st.session_state.target_lang = "es"
-
 if "messages_cache" not in st.session_state:
     st.session_state.messages_cache = []
-
 if "last_timestamp" not in st.session_state:
     st.session_state.last_timestamp = None
 
@@ -81,30 +76,160 @@ if not room_id:
 
 
 # ─────────────────────────────────────────────
-# USER
+# LAYOUT CSS
+# Forces Streamlit's wrapper divs into a full-height
+# flex column: top bar | scrolling messages | input bar
 # ─────────────────────────────────────────────
-st.title(f"💬 Room: {room_id}")
+st.markdown("""
+<style>
+
+/* Kill Streamlit chrome */
+#MainMenu, footer, header { display: none !important; }
+
+/* Full viewport, no overflow */
+html, body,
+[data-testid="stAppViewContainer"],
+[data-testid="stApp"] {
+    height: 100vh !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Main block — flex column filling full height */
+[data-testid="stMain"],
+[data-testid="stMainBlockContainer"],
+.main .block-container {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+/* ── Zone 1: top bar ── */
+#top-bar {
+    flex-shrink: 0;
+    background: #111b21;
+    border-bottom: 1px solid #2a3942;
+    padding: 10px 16px;
+    z-index: 10;
+}
+#top-bar > div,
+#top-bar [data-testid="stVerticalBlock"] {
+    gap: 0 !important;
+    padding: 0 !important;
+}
+
+/* ── Zone 2: message area — grows and scrolls ── */
+#chat-window {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: #0b141a;
+    scrollbar-width: thin;
+    scrollbar-color: #2a3942 transparent;
+}
+#chat-window::-webkit-scrollbar { width: 4px; }
+#chat-window::-webkit-scrollbar-thumb {
+    background: #2a3942;
+    border-radius: 4px;
+}
+
+/* ── Zone 3: input bar — never moves ── */
+#input-bar {
+    flex-shrink: 0;
+    background: #202c33;
+    border-top: 1px solid #2a3942;
+    padding: 10px 16px 14px 16px;
+    z-index: 10;
+}
+#input-bar > div,
+#input-bar [data-testid="stVerticalBlock"] {
+    gap: 0 !important;
+    padding: 0 !important;
+}
+
+/* ── Bubbles ── */
+.chat-bubble {
+    padding: 8px 12px;
+    border-radius: 14px;
+    max-width: 70%;
+    font-size: 14px;
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+.sent {
+    background: #005c4b;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+.received {
+    background: #1f2c34;
+    color: white;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+.grouped { margin-top: 1px; }
+.chat-user {
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0.75;
+    margin-bottom: 3px;
+}
+.chat-translation {
+    font-size: 11px;
+    opacity: 0.55;
+    margin-top: 3px;
+}
+.chat-time {
+    font-size: 10px;
+    opacity: 0.4;
+    text-align: right;
+    margin-top: 4px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+# ─────────────────────────────────────────────
+# ZONE 1 — TOP BAR (name + language selectors)
+# ─────────────────────────────────────────────
+st.markdown('<div id="top-bar">', unsafe_allow_html=True)
 
 st.session_state.username = st.text_input(
-    "Name", value=st.session_state.username
+    "Your name",
+    value=st.session_state.username,
+    placeholder="Enter your name..."
 )
 
-if not st.session_state.username:
-    st.stop()
-
-
-# ─────────────────────────────────────────────
-# LANGUAGE SELECTOR
-# ─────────────────────────────────────────────
 col1, col2 = st.columns(2)
-
 with col1:
-    source_name = st.selectbox("From", list(LANGUAGES.keys()))
+    source_name = st.selectbox("Translate from", list(LANGUAGES.keys()))
 with col2:
-    target_name = st.selectbox("To", list(LANGUAGES.keys()))
+    target_name = st.selectbox("Translate to", list(LANGUAGES.keys()))
 
 st.session_state.source_lang = LANGUAGES[source_name]
 st.session_state.target_lang = LANGUAGES[target_name]
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+if not st.session_state.username:
+    st.markdown(
+        '<div style="color:#8696a0;padding:20px;text-align:center;">'
+        'Enter your name above to start chatting'
+        '</div>',
+        unsafe_allow_html=True
+    )
+    st.stop()
 
 
 # ─────────────────────────────────────────────
@@ -114,13 +239,11 @@ def send_message(text: str):
     text = text.strip()
     if not text:
         return
-
     translated = translate(
         text,
         st.session_state.source_lang,
         st.session_state.target_lang
     )
-
     db.collection("rooms").document(room_id).collection("messages").add({
         "user": st.session_state.username,
         "text": text,
@@ -139,16 +262,13 @@ def fetch_messages():
         .collection("messages")
         .order_by("timestamp", direction=firestore.Query.ASCENDING)
     )
-
     if st.session_state.last_timestamp:
         query = query.where("timestamp", ">", st.session_state.last_timestamp)
 
     new_msgs = list(query.stream())
-
     if new_msgs:
         st.session_state.messages_cache.extend(new_msgs)
-        last_data = new_msgs[-1].to_dict()
-        st.session_state.last_timestamp = last_data.get("timestamp")
+        st.session_state.last_timestamp = new_msgs[-1].to_dict().get("timestamp")
 
 
 # Initial load
@@ -162,67 +282,20 @@ if not st.session_state.messages_cache:
         .stream()
     )
     st.session_state.messages_cache = list(initial)
-
     if st.session_state.messages_cache:
-        last_data = st.session_state.messages_cache[-1].to_dict()
-        st.session_state.last_timestamp = last_data.get("timestamp")
+        st.session_state.last_timestamp = (
+            st.session_state.messages_cache[-1].to_dict().get("timestamp")
+        )
 
 fetch_messages()
-
 messages = st.session_state.messages_cache
 
 
 # ─────────────────────────────────────────────
-# STYLES
+# ZONE 2 — MESSAGE AREA
 # ─────────────────────────────────────────────
-st.markdown("""
-<style>
-.chat-bubble {
-    padding: 8px 12px;
-    border-radius: 14px;
-    margin: 4px 0;
-    max-width: 70%;
-    font-size: 14px;
-}
-.sent {
-    background: #005c4b;
-    color: white;
-    margin-left: auto;
-    border-bottom-right-radius: 4px;
-}
-.received {
-    background: #1f2c34;
-    color: white;
-    margin-right: auto;
-    border-bottom-left-radius: 4px;
-}
-.grouped {
-    margin-top: 2px;
-}
-.chat-user {
-    font-size: 12px;
-    font-weight: 600;
-    opacity: 0.85;
-    margin-bottom: 2px;
-}
-.chat-translation {
-    font-size: 11px;
-    opacity: 0.6;
-    margin-top: 3px;
-}
-.chat-time {
-    font-size: 10px;
-    opacity: 0.4;
-    text-align: right;
-    margin-top: 4px;
-}
-</style>
-""", unsafe_allow_html=True)
+st.markdown('<div id="chat-window">', unsafe_allow_html=True)
 
-
-# ─────────────────────────────────────────────
-# RENDER CHAT
-# ─────────────────────────────────────────────
 previous_user = None
 
 for msg in messages:
@@ -231,15 +304,13 @@ for msg in messages:
     timestamp = data.get("timestamp")
     time_str = timestamp.strftime("%H:%M") if timestamp else ""
 
-    # strip_tags cleans any legacy HTML-polluted messages from Firestore
     user   = html.escape(strip_tags(data.get("user", "")))
     text   = html.escape(strip_tags(data.get("text", "")))
     transl = html.escape(strip_tags(data.get("translated", "")))
 
-    is_me = user == html.escape(st.session_state.username)
-    css = "sent" if is_me else "received"
+    is_me   = user == html.escape(st.session_state.username)
+    css     = "sent" if is_me else "received"
     grouped = "grouped" if user == previous_user else ""
-
     name_html = f'<div class="chat-user">{user}</div>' if user != previous_user else ""
 
     st.markdown(
@@ -254,46 +325,46 @@ for msg in messages:
 
     previous_user = user
 
+st.markdown('<div id="bottom"></div></div>', unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────
-# AUTO-SCROLL
-# ─────────────────────────────────────────────
-st.markdown("<div id='bottom'></div>", unsafe_allow_html=True)
+# Scroll to bottom of chat-window (not the page)
 st.markdown("""
 <script>
-    const el = window.parent.document.getElementById('bottom');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    (function() {
+        const win = document.getElementById('chat-window');
+        if (win) win.scrollTop = win.scrollHeight;
+    })();
 </script>
 """, unsafe_allow_html=True)
 
 
 # ─────────────────────────────────────────────
-# INPUT
+# ZONE 3 — INPUT BAR
 # ─────────────────────────────────────────────
+st.markdown('<div id="input-bar">', unsafe_allow_html=True)
+
 with st.form("chat_form", clear_on_submit=True):
     col1, col2 = st.columns([8, 1])
-
     with col1:
-        message = st.text_input("Type message", label_visibility="collapsed")
-
+        message = st.text_input(
+            "Type message",
+            label_visibility="collapsed",
+            placeholder="Type a message..."
+        )
     with col2:
         send = st.form_submit_button("➤")
-
     if send:
         send_message(message)
         st.rerun()
 
+st.markdown('</div>', unsafe_allow_html=True)
+
 
 # ─────────────────────────────────────────────
-# AUTO-REFRESH (st.fragment — Streamlit 1.33+)
+# AUTO-REFRESH
 # ─────────────────────────────────────────────
 @st.fragment(run_every=3)
 def poll_new_messages():
-    """
-    Only this fragment re-runs every 3 seconds.
-    The input box, language selectors, and username field
-    are outside this fragment and remain completely stable.
-    """
     fetch_messages()
 
 poll_new_messages()
